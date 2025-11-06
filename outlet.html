@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Marks System</title>
+
+  <!-- Simple, clean CSS -->
+  <style>
+    :root{--bg:#f7f9fc;--card:#fff;--text:#111827;--muted:#6b7280;--ring:#e5e7eb;--primary:#2563eb}
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .container{max-width:1100px;margin:32px auto;padding:0 16px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    h1{font-size:26px;margin:0}
+    a.link{color:var(--primary);text-decoration:none;border-bottom:1px solid transparent}
+    a.link:hover{border-color:var(--primary)}
+    .grid{display:grid;grid-template-columns:1.4fr .8fr;gap:18px}
+    .card{background:var(--card);border:1px solid var(--ring);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    input[type="text"],input[type="number"]{flex:1;min-width:160px;padding:10px 12px;border:1px solid var(--ring);border-radius:10px;outline:none}
+    input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+    button{padding:10px 12px;border:1px solid var(--ring);background:#eef2ff;border-radius:10px;cursor:pointer}
+    button.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    table{width:100%;border-collapse:collapse;margin-top:8px;border-radius:12px;overflow:hidden}
+    th,td{padding:10px 12px;border-bottom:1px solid var(--ring);text-align:left}
+    th{background:#f3f4f6;font-weight:600}
+    tfoot td{font-weight:600}
+    .muted{color:var(--muted);font-size:14px}
+    .toolbar{display:grid;gap:8px}
+    .badge{display:inline-block;padding:6px 10px;border:1px dashed var(--ring);border-radius:12px;margin-top:8px;font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Student Marks System</h1>
+      <!-- “with link”: a help/reference link -->
+      <a class="link" href="#about">About this demo</a>
+    </header>
+
+    <div class="grid">
+      <!-- Left: table + inputs -->
+      <div class="card">
+        <div class="row">
+          <input id="name" type="text" placeholder="Name" />
+          <input id="marks" type="number" placeholder="Marks (0–100)" min="0" max="100"/>
+          <button id="addBtn" class="primary">Add Student</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>#</th><th>Name</th><th>Marks</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot>
+            <tr><td colspan="4" class="muted">Use the controls on the right to interact with the student list.</td></tr>
+          </tfoot>
+        </table>
+
+        <div id="status" class="badge">Ready</div>
+
+        <p id="about" class="muted" style="margin-top:12px;">
+          /* Demonstrates arrays and operations: push/pop/sort/reduce/Math.max. The UI updates the DOM immediately. */
+        </p>
+      </div>
+
+      <!-- Right: controls -->
+      <div class="card">
+        <div class="toolbar">
+          <button id="showHighest">Show Highest</button>
+          <button id="showAverage">Show Average</button>
+          <button id="sortMarks">Sort by Marks</button>
+          <button id="removeLast">Remove Last</button>
+          <button id="resetSample">Reset Sample</button>
+          <button id="clearAll">Clear All</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    const tbody   = document.getElementById('tbody');
+    const nameEl  = document.getElementById('name');
+    const marksEl = document.getElementById('marks');
+    const statusEl= document.getElementById('status');
+
+    let students = [];
+
+    function render () {
+      tbody.innerHTML = '';
+      students.forEach((s, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${s.name}</td>
+          <td>${s.marks}</td>
+          <td>
+            <button data-i="${i}" class="del">Delete</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('.del').forEach(btn => {
+        btn.onclick = (e) => {
+          const idx = Number(e.target.getAttribute('data-i'));
+          const removed = students.splice(idx, 1)[0];
+          setStatus('Deleted: ' + removed.name);
+          render();
+        };
+      });
+
+      document.getElementById('removeLast').disabled = students.length === 0;
+      document.getElementById('sortMarks').disabled   = students.length < 2;
+    }
+
+    function setStatus (msg) { statusEl.textContent = msg; }
+
+    function resetSample () {
+      students = [
+        { name: 'Aarav', marks: 78 },
+        { name: 'Diya',  marks: 92 },
+        { name: 'Kabir', marks: 66 },
+        { name: 'Meera', marks: 85 },
+        { name: 'Rohit', marks: 74 }
+      ];
+      setStatus('Loaded sample data');
+      render();
+    }
+
+    document.getElementById('addBtn').onclick = () => {
+      const name  = nameEl.value.trim();
+      const marks = Number(marksEl.value);
+
+      if (!name) { setStatus('Enter a name'); nameEl.focus(); return; }
+      if (Number.isNaN(marks) || marks < 0 || marks > 100) {
+        setStatus('Enter marks between 0 and 100'); marksEl.focus(); return;
+      }
+
+      students.push({ name, marks });
+      nameEl.value = ''; marksEl.value = '';
+      setStatus('Added ' + name);
+      render();
+    };
+
+    document.getElementById('showHighest').onclick = () => {
+      if (students.length === 0) return setStatus('No data');
+      const maxMarks = Math.max(...students.map(s => s.marks));
+      const toppers  = students.filter(s => s.marks === maxMarks).map(s => s.name).join(', ');
+      setStatus(`Highest: ${maxMarks} (${toppers})`);
+    };
+
+    document.getElementById('showAverage').onclick = () => {
+      if (students.length === 0) return setStatus('No data');
+      const avg = (students.reduce((a, s) => a + s.marks, 0) / students.length).toFixed(2);
+      setStatus('Average: ' + avg);
+    };
+
+    document.getElementById('sortMarks').onclick = () => {
+      students.sort((a, b) => b.marks - a.marks);
+      setStatus('Sorted by marks (desc)');
+      render();
+    };
+
+    document.getElementById('removeLast').onclick = () => {
+      if (students.length === 0) return;
+      const removed = students.pop();
+      setStatus('Removed last: ' + removed.name);
+      render();
+    };
+
+    document.getElementById('resetSample').onclick = resetSample;
+
+    document.getElementById('clearAll').onclick = () => {
+      students = [];
+      render();
+      setStatus('Cleared all students');
+    };
+
+    // Initialize with sample data
+    resetSample();
+  </script>
+</body>
+</html>
